@@ -17,7 +17,7 @@ class TtsDeck
     $this->clear();
   }
 
-  public function add_pile($faceup, $name = "") {
+  public function add_pile($faceup = true, $name = "") {
     $this->current_custom_deck_index = 1;
     $this->current_pile_index++;
     $this->deck["ObjectStates"][$this->current_pile_index] = new ArrayObject([
@@ -53,14 +53,19 @@ class TtsDeck
     ]);
   }
 
-  public function add_card($partial_name) {
+  public function add_card($name, $partial = true) {
     if ($this->current_pile_index < 0) $this->add_pile();
-    $matches = array_filter($this->cards, function($card) use ($partial_name) {
-      if (!property_exists($card, "Nickname")) return false;
-      $haystack = trim(strtolower($card->Nickname));
-      $needle = trim(strtolower($partial_name));
-      return strpos($haystack, $needle) !== false;
-    });
+    $matches = array_filter($this->cards,
+      function($card) use ($name, $partial) {
+        if (!property_exists($card, "Nickname")) return false;
+        $haystack = trim(strtolower($card->Nickname));
+        $needle = trim(strtolower($name));
+        if ($partial) {
+          return strpos($haystack, $needle) !== false;
+        } else {
+          return $haystack === $needle;
+        }
+      });
     if (count($matches) !== 1) {
       return array_map(function($card) {
         return $card->Nickname;
