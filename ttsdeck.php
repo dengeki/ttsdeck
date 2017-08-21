@@ -168,7 +168,7 @@ class TtsDeck
           strtolower($object->Name) === "card") {
         array_push($this->cards, $object);
         if ($parent && property_exists($parent, "Name") &&
-            strtolower($parent->Name) === "deck" &&
+            in_array(strtolower($parent->Name), ["deck", "bag"]) &&
             property_exists($parent, "Nickname")) {
           if (!isset($this->card_sets[$parent->Nickname])) {
             $this->card_sets[$parent->Nickname] = [];
