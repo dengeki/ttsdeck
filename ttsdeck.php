@@ -53,13 +53,17 @@ class TtsDeck
     ]);
   }
 
-  public function add_card($name, $partial = true) {
+  public function add_card($name, $normalization = null, $partial = true) {
     if ($this->current_pile_index < 0) $this->add_pile();
     $matches = array_filter($this->cards,
-      function($card) use ($name, $partial) {
+      function($card) use ($name, $normalization, $partial) {
         if (!property_exists($card, "Nickname")) return false;
-        $haystack = trim(strtolower($card->Nickname));
-        $needle = trim(strtolower($name));
+        $haystack = $card->Nickname;
+        $needle = $name;
+        if ($normalization) {
+          $haystack = $normalization($haystack);
+          $needle = $normalization($needle);
+        }
         if ($partial) {
           return strpos($haystack, $needle) !== false;
         } else {
