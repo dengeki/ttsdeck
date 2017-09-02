@@ -26,9 +26,24 @@ $deck->add_card("Purgatory");
 $deck->add_pile(false, "OtherCards");
 
 // Add a card to the new pile (exact match, case insensitive)
-$deck->add_card("Walking Dead", false);
+$deck->add_card("Walking Dead", null, false);
 
-// Encode the deck
+// Add a card to the new pile with custom normalization function
+$deck->add_card("IDontCAREabout spaces  and case", "normalize_card_name");
+
+// Encode the deck as TTS-importable JSON
 $serialized = json_encode($deck->get_deck(),
   JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+// Loop through all available cards
+foreach ($deck->get_card_sets() as $set => $cards) {
+  printf("Set %s:\n", $set);
+  foreach ($cards as $card) {
+    printf("- Card %s\n", $card);
+  }
+}
+
+function normalize_card_name($name) {
+  return str_replace(" ", "", strtolower($name));
+}
 ```
