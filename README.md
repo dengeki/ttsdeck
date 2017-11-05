@@ -9,9 +9,12 @@ Example usage:
 ```php
 require_once "ttsdeck/ttsdeck.php";
 
+$deck = new TtsDeck();
+
 // Game JSON resides in the mods directory of TTS
 // (/path/to/Tabletop Simulator/Mods/Workshop)
-$deck = new TtsDeck(json_decode(file_get_contents("./game.json")));
+$game_json = json_decode(file_get_contents("./game.json"));
+$deck->import_cards($game_json);
 
 // Create face-up pile of cards (optional)
 $deck->add_pile(true, "SomeCards");

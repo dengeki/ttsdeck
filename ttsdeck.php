@@ -4,16 +4,13 @@ require_once __DIR__ . "/util.php";
 
 class TtsDeck
 {
-  private $game_data;
   private $cards = [];
   private $deck;
   private $current_pile_index;
   private $current_custom_deck_index;
-  private $card_sets;
+  private $card_sets = [];
 
-  public function __construct($game_data) {
-    $this->game_data = $game_data;
-    $this->import_cards();
+  public function __construct() {
     $this->clear();
   }
 
@@ -152,23 +149,28 @@ class TtsDeck
     ]);
   }
 
-  private function import_cards($objects = null, $parent = null) {
-    if ($objects === null) {
-      $this->custom_deck_entries = new ArrayObject();
-      $objects = $this->game_data->ObjectStates;
-      $this->card_sets = [];
-    }
+  public function import_cards($game_data) {
+    $this->import_cards_recursive($game_data->ObjectStates);
+  }
+
+  private function import_cards_recursive(
+    $objects, $custom_deck_entries = null, $parent = null
+  ) {
+      if ($custom_deck_entries === null) {
+        $custom_deck_entries = new ArrayObject();
+      }
     foreach ($objects as $object) {
       if (property_exists($object, "Name") &&
           strtolower($object->Name) === "deck" &&
           property_exists($object, "CustomDeck")) {
         foreach ($object->CustomDeck as $id => $obj) {
-          if (!isset($this->custom_deck_entries[$id])) {
-            $this->custom_deck_entries[$id] = $obj;
+          if (!isset($custom_deck_entries[$id])) {
+            $custom_deck_entries[$id] = $obj;
           }
         }
       }
       if (property_exists($object, "Name") &&
+          property_exists($object, "Nickname") && !empty($object->Nickname) &&
           strtolower($object->Name) === "card") {
         array_push($this->cards, $object);
         if ($parent && property_exists($parent, "Name") &&
@@ -181,7 +183,9 @@ class TtsDeck
         }
       } else if (property_exists($object, "ContainedObjects") &&
                  is_array($object->ContainedObjects)) {
-        $this->import_cards($object->ContainedObjects, $object);
+        $this->import_cards_recursive(
+          $object->ContainedObjects, $custom_deck_entries, $object
+        );
       }
     }
   }
