@@ -2,6 +2,18 @@
 
 require_once __DIR__ . "/util.php";
 
+class TtsCard
+{
+  public function __construct($card_data) {
+    foreach (get_object_vars($card_data) as $key => $value) {
+      $this->$key = $value;
+    }
+  }
+  public function __toString() {
+    return $this->Nickname;
+  }
+}
+
 class TtsDeck
 {
   private $cards = [];
@@ -96,7 +108,7 @@ class TtsDeck
     }
     $remapped_card_id = (int)
       sprintf("%d%02d", $custom_deck_id, substr((string) $card->CardID, -2));
-    $card_entry = new ArrayObject([
+    $json_entry = new ArrayObject([
       "Name" => "Card",
       "Nickname" => $card->Nickname,
       "CardID" => $remapped_card_id,
@@ -113,15 +125,27 @@ class TtsDeck
         "scaleZ" => 1
       ])
     ]);
+    foreach ([
+      "Grid", "Snap", "Sticky", "Autoraise", "Tooltip", "GridProjection",
+      "SidewaysCard", "Description"
+    ] as $k) {
+      if (property_exists($card, $k)) {
+        $json_entry[$k] = $card->$k;
+      }
+    }
     array_push(
       $this->deck["ObjectStates"][$this->current_pile_index]["DeckIDs"],
       $remapped_card_id
     );
     array_push(
       $this->deck["ObjectStates"][$this->current_pile_index]
-        ["ContainedObjects"], $card_entry
+        ["ContainedObjects"], $json_entry
     );
     return [$card->Nickname];
+  }
+
+  public function remove_duplicate_cards() {
+    $this->cards = array_unique($this->cards);
   }
 
   public function get_deck() {
@@ -172,7 +196,7 @@ class TtsDeck
       if (property_exists($object, "Name") &&
           property_exists($object, "Nickname") && !empty($object->Nickname) &&
           strtolower($object->Name) === "card") {
-        array_push($this->cards, $object);
+        array_push($this->cards, new TtsCard($object));
         if ($parent && property_exists($parent, "Name") &&
             in_array(strtolower($parent->Name), ["deck", "bag"]) &&
             property_exists($parent, "Nickname")) {
